@@ -4,7 +4,7 @@
 BibTex-to-HTML
 This program is used to fill a tempalte HTML file with information parsed
 from a given BibTeX file and then store the result in a specified HTML
-output file. These files are all given as command linea rguments.
+output file. These files are all given as command line arguments.
 """
 
 import sys
