@@ -8,6 +8,7 @@ output file. These files are all given as command line arguments.
 """
 
 import argparse
+import fileinput
 from shutil import copy2
 import sys
 import bibtexparser
@@ -37,6 +38,28 @@ def get_arguments():
     return args
 
 
+def fill_using_template(input_filename, output_filename):
+    """Parses data from input BibTeX file and uses find replace to fill those
+    fields in the output file."""
+
+    with open(input_filename) as bibtex_file:
+        bib_database = bibtexparser.load(bibtex_file)
+
+
+    bib_dict = bib_database.entries[0]
+
+    """
+    This is a horrible solution. The runtime of this is bad and I'll have to
+    come back to it later and figure out something with regex so I don't have
+    to go through the output file a million times.
+    """
+    for item in bib_dict:
+        fixed_item = "{{" + item + "}}"
+        with fileinput.FileInput(output_filename, inplace=True, backup='.bak') as file:
+            for line in file:
+                print(line.replace(fixed_item, bib_dict[item]), end='')
+
+
 def main():
     """Open files and perform template filling."""
     args = get_arguments()
@@ -45,16 +68,7 @@ def main():
     # To start just copy everything from template into output
     copy2(args["t"], args["o"])
 
-    # template_file = open(args["t"], "r")
-    # input_file = open(args["i"], "r")
-    # output_file = open(args["o"], "w")
-
-
-    with open(args["i"]) as bibtex_file:
-        bib_database = bibtexparser.load(bibtex_file)
-
-    print(bib_database.entries)
-
+    fill_using_template(args["i"], args["o"])
 
 if __name__ == "__main__":
     main()
