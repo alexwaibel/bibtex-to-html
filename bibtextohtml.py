@@ -8,15 +8,17 @@ output file. These files are all given as command line arguments.
 """
 
 import argparse
+from shutil import copy2
 import sys
+import bibtexparser
+
+"""We expect three actual arguments but they each have a flag and the first
+item in argc is the program name so this totals to 7 expected items."""
+EXPECTED_ARG_COUNT = 7
 
 
-def open_files():
-    """Opens files given as command line arguments."""
-
-    """We expect three actual arguments but they each have a flag and the first
-    item in argc is the program name so this totals to 7 expected items."""
-    EXPECTED_ARG_COUNT = 7
+def get_arguments():
+    """Parses the command line arguments."""
 
     program_description = ("Fills HTML template with information parsed from "
                            "a BibTeX file and stores the output in another HTML file.")
@@ -30,12 +32,28 @@ def open_files():
         parser.print_help(sys.stderr)
         sys.exit(1)
 
-    args = parser.parse_args()
-    print(args)
+    # Get dictionary of arguments
+    args = vars(parser.parse_args())
+    return args
+
 
 def main():
-    """Perform template filling."""
-    open_files()
+    """Open files and perform template filling."""
+    args = get_arguments()
+
+
+    # To start just copy everything from template into output
+    copy2(args["t"], args["o"])
+
+    # template_file = open(args["t"], "r")
+    # input_file = open(args["i"], "r")
+    # output_file = open(args["o"], "w")
+
+
+    with open(args["i"]) as bibtex_file:
+        bib_database = bibtexparser.load(bibtex_file)
+
+    print(bib_database.entries)
 
 
 if __name__ == "__main__":
