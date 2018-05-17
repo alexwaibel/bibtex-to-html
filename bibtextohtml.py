@@ -7,6 +7,7 @@ from a given BibTeX file and then store the result in a specified HTML
 output file. These files are all given as command line arguments.
 """
 
+from __future__ import print_function
 import argparse
 import fileinput
 from shutil import copy2
@@ -16,6 +17,14 @@ import bibtexparser
 """We expect three actual arguments but they each have a flag and the first
 item in argc is the program name so this totals to 7 expected items."""
 EXPECTED_ARG_COUNT = 7
+
+OPEN_BRACKETS = '{{'
+CLOSE_BRACKETS = '}}'
+
+def eprint(*args, **kwargs):
+    """Prints to stderr"""
+    print(*args, file=sys.stderr, **kwargs)
+
 
 
 def get_arguments():
@@ -45,25 +54,30 @@ def fill_using_template(input_filename, output_filename):
     with open(input_filename) as bibtex_file:
         bib_database = bibtexparser.load(bibtex_file)
 
-
     bib_dict = bib_database.entries[0]
 
-    """
-    This is a horrible solution. The runtime of this is bad and I'll have to
-    come back to it later and figure out something with regex so I don't have
-    to go through the output file a million times.
-    """
-    for item in bib_dict:
-        fixed_item = "{{" + item + "}}"
-        with fileinput.FileInput(output_filename, inplace=True, backup='.bak') as file:
-            for line in file:
-                print(line.replace(fixed_item, bib_dict[item]), end='')
+    with fileinput.FileInput(output_filename, inplace=True) as file:
+        for line in file:
+            last_found = 0
+            open_bracket_location = line.find(OPEN_BRACKETS, last_found)
+            close_bracket_location = line.find(CLOSE_BRACKETS, last_found)
+
+            while open_bracket_location != -1:
+                key = line[(open_bracket_location + 2):close_bracket_location]
+                if key in bib_dict:
+                    line = line.replace(('{{' + key + '}}'), bib_dict[key])
+                else:
+                    eprint(key + " not found in input file.")
+                last_found = close_bracket_location + 2
+                open_bracket_location = line.find(OPEN_BRACKETS, last_found)
+                close_bracket_location = line.find(CLOSE_BRACKETS, last_found)
+
+            print(line, end='')
 
 
 def main():
     """Open files and perform template filling."""
     args = get_arguments()
-
 
     # To start just copy everything from template into output
     copy2(args["t"], args["o"])
