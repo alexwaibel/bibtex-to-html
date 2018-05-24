@@ -51,6 +51,31 @@ def fill_using_template(input_filename, output_filename):
     """Parses data from input BibTeX file and uses find replace to fill those
     fields in the output file."""
 
+    months = {"jan": "January",
+              "1": "January",
+              "feb" : "February",
+              "2" : "February",
+              "mar" : "March",
+              "3" : "March",
+              "apr" : "April",
+              "4" : "April",
+              "may" : "May",
+              "5" : "May",
+              "jun" : "June",
+              "6" : "June",
+              "jul" : "July",
+              "7" : "July",
+              "aug" : "August",
+              "8" : "August",
+              "sep" : "September",
+              "9" : "September",
+              "oct" : "October",
+              "10" : "October",
+              "nov" : "November",
+              "11" : "November",
+              "dec" : "December",
+              "12" : "December"}
+
     with open(input_filename) as bibtex_file:
         bib_database = bibtexparser.load(bibtex_file)
 
@@ -65,7 +90,10 @@ def fill_using_template(input_filename, output_filename):
             while open_bracket_location != -1:
                 key = line[(open_bracket_location + 2):close_bracket_location]
                 if key in bib_dict:
-                    line = line.replace(('{{' + key + '}}'), bib_dict[key])
+                    if key == "month":
+                        line = line.replace(('{{' + key + '}}'), months[bib_dict[key]])
+                    else:
+                        line = line.replace(('{{' + key + '}}'), bib_dict[key])
                 else:
                     eprint(key + " not found in input file.")
                 last_found = close_bracket_location + 2
